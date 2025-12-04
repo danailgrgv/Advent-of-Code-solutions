@@ -1,46 +1,101 @@
-import hashlib
-
 f = open("input.txt", "r")
-key = f.read()
+input = f.read()
+grid = input.splitlines()
 f.close()
 
-def hash(data, key):
-    string_to_hash = str(key) + str(data)
-    hashedVal = hashlib.md5(string_to_hash.encode()).hexdigest()
-    return hashedVal
+# convert the grid from strings to char arrays
+char_grid = []
+for row in grid:
+    char_row = []
+    for cell in row:
+        char_row.append(cell)
+    char_grid.append(char_row)
+grid = char_grid
 
-# Check if the hash starts with five 0s
-def check_if_correct_part_1(hash):
-    if(hash[:5] == "00000"):
+row_count = len(grid)
+column_count = len(grid[0])
+
+# check if a roll is accessible according to the rules
+def is_accessable(x, y):
+    neighbour_counter = 0
+
+    # top row
+    if(x > 0):
+        # above
+        if(grid[x-1][y] == '@'):
+            neighbour_counter += 1
+         # above left
+        if(y > 0):
+            if(grid[x-1][y-1] == '@'):
+                neighbour_counter += 1
+        # above right    
+        if(y < column_count - 1):
+            if(grid[x-1][y+1] == '@'):
+                neighbour_counter += 1
+
+    # middle row
+    # left
+    if(y > 0):
+        if(grid[x][y-1] == '@'):
+                neighbour_counter += 1
+    # right
+    if(y < column_count - 1):
+        if(grid[x][y+1] == '@'):
+                neighbour_counter += 1
+
+    # row below
+    if(x < row_count - 1):
+        # below
+        if(grid[x+1][y] == '@'):
+            neighbour_counter += 1
+        # below left
+        if(y > 0):
+            if(grid[x+1][y-1] == '@'):
+                neighbour_counter += 1
+        # below right    
+        if(y < column_count - 1):
+            if(grid[x+1][y+1] == '@'):
+                neighbour_counter += 1
+
+    if(neighbour_counter < 4):
         return True
     else:
         return False
-    
-# Check if the hash starts with six 0s
-def check_if_correct_part_2(hash):
-    if(hash[:6] == "000000"):
-        return True
-    else:
-        return False    
 
-data = 1
-hashed = 0
+counter = 0
+for x, row in enumerate(grid):
+    for y, cell in enumerate(row):
+        if(cell == '@'):
+            counter += is_accessable(x, y)
 
-# Increment until needed hash is found
+print("Accessible rolls = ", counter)
+
+# part 2
+
+# removes all rolls marked with 'x', returns the number of rolls removed
+def remove_rolls(grid):
+    rm_counter = 0
+    for x, row in enumerate(grid):
+        for y, cell in enumerate(row):
+            if cell == 'x':
+                grid[x][y] = '.'
+                rm_counter += 1
+    return rm_counter
+
+# scan removable rolls and mark them with 'x'
+def scan_removable(grid):
+    for x, row in enumerate(grid):
+        for y, cell in enumerate(row):
+            if(cell == '@'):
+                if(is_accessable(x, y)):
+                    row[y] = 'x'
+
+rm_counter = 0
 while(True):
-    hashed = hash(data, key)
-    if(check_if_correct_part_1(hashed)):
-        part_1_asnwer = data
+    scan_removable(grid)
+    removed_count = remove_rolls(grid)
+    if(removed_count == 0):
         break
-    data += 1
+    rm_counter += removed_count
 
-# Increment until needed hash is found
-while(True):
-    hashed = hash(data, key)
-    if(check_if_correct_part_2(hashed)):
-        part_2_asnwer = data
-        break
-    data += 1
-
-print("Part 1: ", part_1_asnwer)
-print("Part 2: ", part_2_asnwer)
+print("Could remove = ", rm_counter)
